@@ -1,0 +1,22 @@
+# Python
+scraper.py
+__pycache__/
+*.pyc
+
+# Documentation (not needed for deployment)
+objective.txt
+F1_Architecture_and_Data_Flow.md
+page.png
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+
+# Temp files
+*.tmp
+*.log
