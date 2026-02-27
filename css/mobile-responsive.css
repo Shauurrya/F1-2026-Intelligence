@@ -7,6 +7,10 @@
    ═══════════════════════════════════════════════════════════════ */
 
 /* ═══ PREDICTIONS LOADING OVERLAY ═══ */
+.api-health-widget {
+    bottom: 32px;
+}
+
 .pred-loader {
     position: absolute;
     inset: 0;
@@ -30,18 +34,25 @@
 }
 
 @keyframes pred-spin {
+
     0%,
     100% {
         transform: scale(1) rotate(0deg);
     }
+
     50% {
         transform: scale(1.2) rotate(180deg);
     }
 }
 
 @keyframes pred-loader-in {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
 /* ═══ RANGE INPUT SLIDERS (What-If Builder) ═══ */
@@ -1088,6 +1099,7 @@ body {
     .bottom-tab-label {
         font-size: 0.45rem !important;
     }
+
     .bottom-tab-icon {
         font-size: 1rem !important;
     }
@@ -1392,10 +1404,12 @@ body {
 }
 
 @keyframes pulse-line {
+
     0%,
     100% {
         opacity: 0.6;
     }
+
     50% {
         opacity: 1;
     }
@@ -1470,10 +1484,12 @@ body {
 }
 
 @keyframes pulse-badge {
+
     0%,
     100% {
         box-shadow: 0 0 0 0 rgba(225, 6, 0, 0.3);
     }
+
     50% {
         box-shadow: 0 0 0 4px rgba(225, 6, 0, 0);
     }
