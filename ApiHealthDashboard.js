@@ -217,18 +217,28 @@ window.ApiHealthDashboard = (() => {
     // INITIALIZATION
     // ─────────────────────────────────────────────────────────────
     function init() {
-        // Create floating widget
+        // Create floating widget — positioned top-right to avoid overlapping bottom tab bar
         _widgetElement = document.createElement('div');
         _widgetElement.id = 'api-health-widget';
-        // Position above bottom tab bar on mobile (72px), normal on desktop (16px)
-        var bottomPos = window.innerWidth <= 768 ? '72px' : '16px';
-        _widgetElement.style.cssText = 'position:fixed;bottom:' + bottomPos + ';right:12px;z-index:250;min-width:140px;max-width:300px;background:#0d1117ee;backdrop-filter:blur(12px);border:1px solid #ffffff12;border-radius:10px;padding:6px;box-shadow:0 8px 32px #00000055;font-family:Inter,sans-serif;transition:all 0.3s ease';
+        _widgetElement.style.cssText = 'position:fixed;top:70px;right:12px;z-index:250;min-width:140px;max-width:260px;background:#0d1117ee;backdrop-filter:blur(12px);border:1px solid #ffffff12;border-radius:10px;padding:6px;box-shadow:0 8px 32px #00000055;font-family:Inter,sans-serif;transition:all 0.3s ease;max-height:calc(100vh - 100px);overflow-y:auto';
         document.body.appendChild(_widgetElement);
+
+        // Adjust position on mobile — below smaller header
+        if (window.innerWidth <= 768) {
+            _widgetElement.style.top = '60px';
+            _widgetElement.style.maxWidth = '200px';
+        }
 
         // Re-position on window resize
         window.addEventListener('resize', function () {
             if (_widgetElement) {
-                _widgetElement.style.bottom = window.innerWidth <= 768 ? '72px' : '16px';
+                if (window.innerWidth <= 768) {
+                    _widgetElement.style.top = '60px';
+                    _widgetElement.style.maxWidth = '200px';
+                } else {
+                    _widgetElement.style.top = '70px';
+                    _widgetElement.style.maxWidth = '260px';
+                }
             }
         });
 
