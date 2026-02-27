@@ -21,7 +21,6 @@ desktop.ini
 
 # Dependencies (if any)
 node_modules/
-.vercel/
 
 # Temp files
 *.tmp
