@@ -58,7 +58,7 @@ window.ApiHealthDashboard = (() => {
         if (!src) return;
 
         const testUrls = {
-            openf1: 'https://api.openf1.org/v1/sessions?year=2026&limit=1',
+            openf1: 'https://api.openf1.org/v1/sessions?session_key=11465',
             jolpica: 'https://api.jolpi.ca/ergast/f1/current.json',
             openmeteo: 'https://api.open-meteo.com/v1/forecast?latitude=0&longitude=0&daily=temperature_2m_max&forecast_days=1',
         };
@@ -220,7 +220,7 @@ window.ApiHealthDashboard = (() => {
         // Create floating widget — positioned top-right to avoid overlapping bottom tab bar
         _widgetElement = document.createElement('div');
         _widgetElement.id = 'api-health-widget';
-        _widgetElement.style.cssText = 'position:fixed;top:70px;right:12px;z-index:250;min-width:140px;max-width:260px;background:#0d1117ee;backdrop-filter:blur(12px);border:1px solid #ffffff12;border-radius:10px;padding:6px;box-shadow:0 8px 32px #00000055;font-family:Inter,sans-serif;transition:all 0.3s ease;max-height:calc(100vh - 100px);overflow-y:auto';
+        _widgetElement.style.cssText = 'position:fixed;top:70px;bottom:auto;right:12px;z-index:250;min-width:140px;max-width:260px;background:#0d1117ee;backdrop-filter:blur(12px);border:1px solid #ffffff12;border-radius:10px;padding:6px;box-shadow:0 8px 32px #00000055;font-family:Inter,sans-serif;transition:all 0.3s ease;max-height:calc(100vh - 100px);overflow-y:auto';
         document.body.appendChild(_widgetElement);
 
         // Adjust position on mobile — below smaller header
