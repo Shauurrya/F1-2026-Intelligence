@@ -65,6 +65,20 @@ body {
     background: #2a5fa0;
 }
 
+/* ===== MOBILE BOTTOM TAB BAR (hidden by default, shown via mobile-responsive.css) ===== */
+.mobile-bottom-tabs {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 300;
+}
+
+.bottom-more-popup {
+    display: none;
+}
+
 /* ===== HEADER ===== */
 .header {
     position: sticky;

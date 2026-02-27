@@ -3,7 +3,7 @@
     "trailingSlash": false,
     "rewrites": [
         {
-            "source": "/(.*)",
+            "source": "/((?!.*\\.).*)",
             "destination": "/index.html"
         }
     ],
@@ -22,33 +22,25 @@
             ]
         },
         {
-            "source": "/(.*).js",
+            "source": "/(.*)\\.js",
             "headers": [
                 {
                     "key": "Cache-Control",
                     "value": "public, max-age=86400, stale-while-revalidate=3600"
-                },
-                {
-                    "key": "Content-Type",
-                    "value": "application/javascript; charset=utf-8"
                 }
             ]
         },
         {
-            "source": "/(.*).css",
+            "source": "/(.*)\\.css",
             "headers": [
                 {
                     "key": "Cache-Control",
                     "value": "public, max-age=86400, stale-while-revalidate=3600"
-                },
-                {
-                    "key": "Content-Type",
-                    "value": "text/css; charset=utf-8"
                 }
             ]
         },
         {
-            "source": "/(.*).json",
+            "source": "/(.*)\\.json",
             "headers": [
                 {
                     "key": "Cache-Control",
@@ -57,10 +49,6 @@
                 {
                     "key": "Access-Control-Allow-Origin",
                     "value": "*"
-                },
-                {
-                    "key": "Content-Type",
-                    "value": "application/json; charset=utf-8"
                 }
             ]
         },
