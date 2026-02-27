@@ -23,6 +23,10 @@ body {
     position: relative;
 }
 
+#api-health-widget {
+    margin-bottom: 40px;
+}
+
 /* ===== BACKGROUND ===== */
 .bg-grid {
     position: fixed;
