@@ -220,8 +220,17 @@ window.ApiHealthDashboard = (() => {
         // Create floating widget
         _widgetElement = document.createElement('div');
         _widgetElement.id = 'api-health-widget';
-        _widgetElement.style.cssText = 'position:fixed;bottom:16px;right:16px;z-index:9999;min-width:180px;max-width:320px;background:#0d1117ee;backdrop-filter:blur(12px);border:1px solid #ffffff12;border-radius:12px;padding:8px;box-shadow:0 8px 32px #00000055;font-family:Inter,sans-serif;transition:all 0.3s ease';
+        // Position above bottom tab bar on mobile (72px), normal on desktop (16px)
+        var bottomPos = window.innerWidth <= 768 ? '72px' : '16px';
+        _widgetElement.style.cssText = 'position:fixed;bottom:' + bottomPos + ';right:12px;z-index:250;min-width:140px;max-width:300px;background:#0d1117ee;backdrop-filter:blur(12px);border:1px solid #ffffff12;border-radius:10px;padding:6px;box-shadow:0 8px 32px #00000055;font-family:Inter,sans-serif;transition:all 0.3s ease';
         document.body.appendChild(_widgetElement);
+
+        // Re-position on window resize
+        window.addEventListener('resize', function () {
+            if (_widgetElement) {
+                _widgetElement.style.bottom = window.innerWidth <= 768 ? '72px' : '16px';
+            }
+        });
 
         // Initial health check
         checkAllHealth();

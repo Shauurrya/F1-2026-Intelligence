@@ -24,7 +24,7 @@ window.LiveAutoUpdate = (() => {
     const POLL_NORMAL_MS = 5 * 60 * 1000;   // 5 minutes (normal)
     const POLL_RACEWEEK_MS = 2 * 60 * 1000;   // 2 minutes (race weekend Fri-Sun)
     const POLL_RACEDAY_MS = 60 * 1000;        // 60 seconds (race day — Sunday)
-    const POLL_RACEHOUR_MS = 30 * 1000;        // 30 seconds (within 2 hours of race start)
+    const POLL_RACEHOUR_MS = 5 * 1000;         // 5 seconds (within 2 hours of race start — as specified)
     const POLL_POSTRACE_MS = 45 * 1000;        // 45 seconds (1-3 hours after race start)
 
     // Driver mapping (Ergast driverId → our app driverId)

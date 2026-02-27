@@ -901,10 +901,16 @@ const AppRouter = (() => {
     if (el) el.classList.add('active');
     if (nav) nav.classList.add('active');
 
-    // Sync mobile drawer active state
-    document.querySelectorAll('.drawer-nav-link').forEach(l => {
-      l.classList.toggle('active', l.dataset.view === view);
-    });
+    // Sync mobile bottom tab bar active state
+    const mainTabViews = ['dashboard', 'teams', 'analytics', 'predictions', 'schedule'];
+    document.querySelectorAll('.bottom-tab').forEach(t => t.classList.remove('active'));
+    if (mainTabViews.includes(view)) {
+      const tab = document.querySelector(`.bottom-tab[data-view="${view}"]`);
+      if (tab) tab.classList.add('active');
+    } else {
+      const moreBtn = document.getElementById('btab-more');
+      if (moreBtn) moreBtn.classList.add('active');
+    }
 
     // Persist active view
     try { (window.safeStorage || localStorage).setItem(STORAGE_KEY, view); } catch (e) { /* ignore */ }
@@ -938,7 +944,7 @@ const AppRouter = (() => {
     } catch (e) { /* ignore */ }
   }
 
-  // ── SWIPE GESTURES REMOVED ── (mobile uses drawer menu for navigation)
+  // ── SWIPE GESTURES REMOVED ── (mobile uses bottom tab bar for navigation)
 
   // ── PULL-TO-REFRESH (mobile) ──
   function initPullToRefresh() {

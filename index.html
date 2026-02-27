@@ -121,12 +121,7 @@
                 <a href="#" class="nav-link" data-view="predictions" id="nav-live-intel" style="color:#f97316">🔥 Live
                     Intel</a>
             </nav>
-            <!-- HAMBURGER BUTTON (mobile only) -->
-            <button class="hamburger-btn" id="hamburger-btn" aria-label="Open navigation menu">
-                <span></span>
-                <span></span>
-                <span></span>
-            </button>
+
             <div class="header-meta">
                 <div class="live-badge">
                     <span class="live-dot"></span>
@@ -141,52 +136,40 @@
         </div>
     </header>
 
-    <!-- MOBILE NAV OVERLAY -->
-    <div class="mobile-nav-overlay" id="mobile-nav-overlay"></div>
-
-    <!-- MOBILE NAV DRAWER -->
-    <div class="mobile-nav-drawer" id="mobile-nav-drawer">
-        <div class="drawer-brand">
-            <span class="drawer-brand-icon">⚡</span>
-            <div>
-                <span class="drawer-brand-text">F1 INTELLIGENCE</span>
-                <span class="drawer-brand-sub">2026 Technical System</span>
-            </div>
+    <!-- MOBILE BOTTOM TAB BAR -->
+    <nav class="mobile-bottom-tabs" id="mobile-bottom-tabs">
+        <a href="#" class="bottom-tab active" data-view="dashboard" id="btab-dashboard">
+            <span class="bottom-tab-icon">📊</span>
+            <span class="bottom-tab-label">Home</span>
+        </a>
+        <a href="#" class="bottom-tab" data-view="teams" id="btab-teams">
+            <span class="bottom-tab-icon">🏎️</span>
+            <span class="bottom-tab-label">Teams</span>
+        </a>
+        <a href="#" class="bottom-tab" data-view="analytics" id="btab-analytics">
+            <span class="bottom-tab-icon">📈</span>
+            <span class="bottom-tab-label">Stats</span>
+        </a>
+        <a href="#" class="bottom-tab" data-view="predictions" id="btab-predictions">
+            <span class="bottom-tab-icon">🔮</span>
+            <span class="bottom-tab-label">Predict</span>
+        </a>
+        <a href="#" class="bottom-tab" data-view="schedule" id="btab-schedule">
+            <span class="bottom-tab-icon">📅</span>
+            <span class="bottom-tab-label">Schedule</span>
+        </a>
+        <button class="bottom-tab bottom-tab-more" id="btab-more" aria-label="More tabs">
+            <span class="bottom-tab-icon">⋯</span>
+            <span class="bottom-tab-label">More</span>
+        </button>
+        <!-- More menu popup -->
+        <div class="bottom-more-popup" id="bottom-more-popup">
+            <a href="#" class="more-popup-link" data-view="compare">⚖️ Compare</a>
+            <a href="#" class="more-popup-link" data-view="rankings">🏆 Rankings</a>
+            <a href="#" class="more-popup-link" data-view="testing">🔴 Testing</a>
+            <a href="#" class="more-popup-link" data-view="predictions" id="more-live-intel">🔥 Live Intel</a>
         </div>
-        <div class="drawer-section-label">Navigation</div>
-        <a href="#" class="drawer-nav-link active" data-view="dashboard">
-            <span class="drawer-nav-icon">📊</span> Dashboard
-        </a>
-        <a href="#" class="drawer-nav-link" data-view="teams">
-            <span class="drawer-nav-icon">🏎️</span> Teams
-        </a>
-        <a href="#" class="drawer-nav-link" data-view="analytics">
-            <span class="drawer-nav-icon">📈</span> Analytics
-        </a>
-        <a href="#" class="drawer-nav-link" data-view="compare">
-            <span class="drawer-nav-icon">⚖️</span> Compare
-        </a>
-        <a href="#" class="drawer-nav-link" data-view="rankings">
-            <span class="drawer-nav-icon">🏆</span> Rankings
-        </a>
-        <div class="drawer-section-label">Intelligence</div>
-        <a href="#" class="drawer-nav-link" data-view="testing">
-            <span class="drawer-nav-icon">🔴</span> Testing
-        </a>
-        <a href="#" class="drawer-nav-link" data-view="predictions">
-            <span class="drawer-nav-icon">🔮</span> Predictions
-        </a>
-        <a href="#" class="drawer-nav-link" data-view="schedule">
-            <span class="drawer-nav-icon">📅</span> Schedule
-        </a>
-        <a href="#" class="drawer-nav-link" data-view="predictions" id="drawer-live-intel">
-            <span class="drawer-nav-icon">🔥</span> Live Intel
-        </a>
-        <div class="drawer-live-status">
-            <span class="drawer-live-dot"></span>
-            <span class="drawer-live-text">SYSTEM ONLINE — LIVE DATA MODE</span>
-        </div>
-    </div>
+    </nav>
 
     <!-- TICKER BAR -->
     <div class="ticker-bar">

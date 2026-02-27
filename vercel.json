@@ -1,39 +1,84 @@
 {
     "cleanUrls": true,
     "trailingSlash": false,
+    "rewrites": [
+        {
+            "source": "/(.*)",
+            "destination": "/index.html"
+        }
+    ],
     "headers": [
         {
             "source": "/data/(.*)",
             "headers": [
-                { "key": "Cache-Control", "value": "public, max-age=3600, stale-while-revalidate=600" },
-                { "key": "Access-Control-Allow-Origin", "value": "*" }
+                {
+                    "key": "Cache-Control",
+                    "value": "public, max-age=3600, stale-while-revalidate=600"
+                },
+                {
+                    "key": "Access-Control-Allow-Origin",
+                    "value": "*"
+                }
             ]
         },
         {
             "source": "/(.*).js",
             "headers": [
-                { "key": "Cache-Control", "value": "public, max-age=86400, stale-while-revalidate=3600" }
+                {
+                    "key": "Cache-Control",
+                    "value": "public, max-age=86400, stale-while-revalidate=3600"
+                },
+                {
+                    "key": "Content-Type",
+                    "value": "application/javascript; charset=utf-8"
+                }
             ]
         },
         {
             "source": "/(.*).css",
             "headers": [
-                { "key": "Cache-Control", "value": "public, max-age=86400, stale-while-revalidate=3600" }
+                {
+                    "key": "Cache-Control",
+                    "value": "public, max-age=86400, stale-while-revalidate=3600"
+                },
+                {
+                    "key": "Content-Type",
+                    "value": "text/css; charset=utf-8"
+                }
             ]
         },
         {
             "source": "/(.*).json",
             "headers": [
-                { "key": "Cache-Control", "value": "public, max-age=3600" },
-                { "key": "Access-Control-Allow-Origin", "value": "*" }
+                {
+                    "key": "Cache-Control",
+                    "value": "public, max-age=3600"
+                },
+                {
+                    "key": "Access-Control-Allow-Origin",
+                    "value": "*"
+                },
+                {
+                    "key": "Content-Type",
+                    "value": "application/json; charset=utf-8"
+                }
             ]
         },
         {
             "source": "/(.*)",
             "headers": [
-                { "key": "X-Content-Type-Options", "value": "nosniff" },
-                { "key": "X-Frame-Options", "value": "DENY" },
-                { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
+                {
+                    "key": "X-Content-Type-Options",
+                    "value": "nosniff"
+                },
+                {
+                    "key": "X-Frame-Options",
+                    "value": "DENY"
+                },
+                {
+                    "key": "Referrer-Policy",
+                    "value": "strict-origin-when-cross-origin"
+                }
             ]
         }
     ]
