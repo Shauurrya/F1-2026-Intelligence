@@ -76,11 +76,30 @@ const MobileNav = (() => {
                 // CRITICAL: Trigger PredictionsCenter init for predictions/live-intel views
                 if (view === 'predictions') {
                     _triggerPredictionsInit();
+                    // Also trigger LiveIntelligence if navigating via Live Intel link
+                    if (link.id === 'drawer-live-intel') {
+                        setTimeout(() => {
+                            if (typeof LiveIntelligence !== 'undefined' && LiveIntelligence.init) {
+                                LiveIntelligence.refresh();
+                            }
+                        }, 300);
+                    }
                 }
 
                 // Trigger Schedule init for schedule view
                 if (view === 'schedule') {
                     _triggerScheduleInit();
+                }
+
+                // Trigger Testing view init
+                if (view === 'testing') {
+                    setTimeout(() => {
+                        const navTest = document.getElementById('nav-testing');
+                        if (navTest) {
+                            const evt = new Event('click', { bubbles: true });
+                            navTest.dispatchEvent(evt);
+                        }
+                    }, 150);
                 }
             });
         });

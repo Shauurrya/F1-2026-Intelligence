@@ -1,3 +1,8 @@
+# Python bytecode
+__pycache__/
+*.pyc
+*.pyo
+
 # Documentation (not needed for deployment)
 objective.txt
 F1_Architecture_and_Data_Flow.md
@@ -11,7 +16,17 @@ desktop.ini
 # IDE
 .vscode/
 .idea/
+*.swp
+*.swo
+
+# Dependencies (if any)
+node_modules/
+.vercel/
 
 # Temp files
 *.tmp
 *.log
+
+# Environment
+.env
+.env.local
