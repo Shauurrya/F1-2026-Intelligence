@@ -1,5 +1,3 @@
-//hi
-
 'use strict';
 /* ═══════════════════════════════════════════════════════════════
    CHART.JS VISUAL UPGRADES — ChartVisuals.js

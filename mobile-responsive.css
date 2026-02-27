@@ -1,8 +1,9 @@
 /* ═══════════════════════════════════════════════════════════════
-   F1 STATS — MOBILE RESPONSIVE v3.1
+   F1 STATS — MOBILE RESPONSIVE v4.0
    Complete mobile-first overhaul with hamburger menu,
-   slide-out drawer navigation, dynamic animations,
-   swipe gestures, pull-to-refresh, and premium touch interactions.
+   slide-out drawer navigation, pull-to-refresh, and premium 
+   touch interactions. Swipe tab navigation removed — uses 
+   drawer menu for all mobile tab switching.
    ═══════════════════════════════════════════════════════════════ */
 
 /* ═══ PREDICTIONS LOADING OVERLAY ═══ */
@@ -29,25 +30,18 @@
 }
 
 @keyframes pred-spin {
-
     0%,
     100% {
         transform: scale(1) rotate(0deg);
     }
-
     50% {
         transform: scale(1.2) rotate(180deg);
     }
 }
 
 @keyframes pred-loader-in {
-    from {
-        opacity: 0;
-    }
-
-    to {
-        opacity: 1;
-    }
+    from { opacity: 0; }
+    to { opacity: 1; }
 }
 
 /* ═══ RANGE INPUT SLIDERS (What-If Builder) ═══ */
@@ -112,8 +106,9 @@ body {
     padding-right: env(safe-area-inset-right, 0px);
 }
 
+
 /* ═══════════════════════════════════════════════════
-   HAMBURGER BUTTON (hidden on desktop)
+   HAMBURGER BUTTON (hidden on desktop, shown on mobile)
    ═══════════════════════════════════════════════════ */
 .hamburger-btn {
     display: none;
@@ -121,8 +116,8 @@ body {
     justify-content: center;
     align-items: center;
     gap: 5px;
-    width: 40px;
-    height: 40px;
+    width: 44px;
+    height: 44px;
     border: none;
     background: rgba(255, 255, 255, 0.06);
     border-radius: 8px;
@@ -131,6 +126,12 @@ body {
     z-index: 210;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     flex-shrink: 0;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+}
+
+.hamburger-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
 }
 
 .hamburger-btn:active {
@@ -148,6 +149,10 @@ body {
 }
 
 /* Hamburger → X animation */
+.hamburger-btn.active {
+    background: rgba(225, 6, 0, 0.15);
+}
+
 .hamburger-btn.active span:nth-child(1) {
     transform: rotate(45deg) translate(5px, 5px);
 }
@@ -161,8 +166,9 @@ body {
     transform: rotate(-45deg) translate(5px, -5px);
 }
 
+
 /* ═══════════════════════════════════════════════════
-   MOBILE NAV OVERLAY
+   MOBILE NAV OVERLAY (backdrop)
    ═══════════════════════════════════════════════════ */
 .mobile-nav-overlay {
     display: none;
@@ -173,15 +179,18 @@ body {
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     opacity: 0;
+    pointer-events: none;
     transition: opacity 0.3s ease;
 }
 
 .mobile-nav-overlay.visible {
     opacity: 1;
+    pointer-events: auto;
 }
 
+
 /* ═══════════════════════════════════════════════════
-   MOBILE NAV DRAWER
+   MOBILE NAV DRAWER (slide-out menu)
    ═══════════════════════════════════════════════════ */
 .mobile-nav-drawer {
     display: none;
@@ -199,12 +208,14 @@ body {
     padding: 80px 1.25rem 2rem;
     overflow-y: auto;
     transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    -webkit-overflow-scrolling: touch;
 }
 
 .mobile-nav-drawer.open {
     right: 0;
 }
 
+/* Drawer Brand */
 .mobile-nav-drawer .drawer-brand {
     display: flex;
     align-items: center;
@@ -237,6 +248,19 @@ body {
     margin-top: 2px;
 }
 
+/* Drawer Section Labels */
+.mobile-nav-drawer .drawer-section-label {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.6rem;
+    font-weight: 700;
+    color: #666;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    padding: 0.8rem 1rem 0.3rem;
+    margin-top: 0.5rem;
+}
+
+/* Drawer Navigation Links */
 .mobile-nav-drawer .drawer-nav-link {
     display: flex;
     align-items: center;
@@ -252,10 +276,13 @@ body {
     transition: all 0.25s ease;
     letter-spacing: 0.05em;
     border-left: 3px solid transparent;
+    min-height: 48px;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .mobile-nav-drawer .drawer-nav-link:active {
     transform: scale(0.97);
+    background: rgba(225, 6, 0, 0.08);
 }
 
 .mobile-nav-drawer .drawer-nav-link.active {
@@ -276,17 +303,7 @@ body {
     text-align: center;
 }
 
-.mobile-nav-drawer .drawer-section-label {
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 0.6rem;
-    font-weight: 700;
-    color: #666;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    padding: 0.8rem 1rem 0.3rem;
-    margin-top: 0.5rem;
-}
-
+/* Drawer Live Status */
 .mobile-nav-drawer .drawer-live-status {
     display: flex;
     align-items: center;
@@ -317,11 +334,67 @@ body {
 
 
 /* ═══════════════════════════════════════════════════
+   LARGE SCREEN — 1400px+  
+   ═══════════════════════════════════════════════════ */
+@media (min-width: 1400px) {
+    .main-content {
+        max-width: 1600px;
+        margin: 0 auto;
+        padding: 2.5rem 3rem;
+    }
+
+    .hero-stats {
+        gap: 1.25rem;
+    }
+
+    .team-grid {
+        gap: 1.25rem;
+    }
+
+    .charts-row {
+        gap: 1.5rem;
+    }
+}
+
+
+/* ═══════════════════════════════════════════════════
+   TABLET — 1024px and below
+   ═══════════════════════════════════════════════════ */
+@media (max-width: 1024px) {
+
+    /* Header */
+    .header {
+        padding: 0 1rem;
+    }
+
+    .header-inner {
+        gap: 0.8rem;
+    }
+
+    .hero-stats {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .charts-row {
+        grid-template-columns: 1fr;
+    }
+
+    .compare-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .analytics-grid .chart-card.wide {
+        grid-column: span 1;
+    }
+}
+
+
+/* ═══════════════════════════════════════════════════
    TABLET — 768px and below
    ═══════════════════════════════════════════════════ */
 @media (max-width: 768px) {
 
-    /* Show hamburger, hide desktop nav */
+    /* ── Show hamburger, hide desktop nav ── */
     .hamburger-btn {
         display: flex !important;
     }
@@ -355,11 +428,11 @@ body {
     }
 
     .logo-main {
-        font-size: 0.8rem !important;
+        font-size: clamp(0.65rem, 2.5vw, 0.85rem) !important;
     }
 
     .logo-sub {
-        font-size: 0.5rem !important;
+        font-size: clamp(0.42rem, 1.5vw, 0.55rem) !important;
     }
 
     .header-meta {
@@ -374,6 +447,7 @@ body {
     .refresh-btn {
         padding: 0.3rem 0.5rem !important;
         font-size: 0.65rem !important;
+        min-height: 44px !important;
     }
 
     /* ── TICKER BAR ── */
@@ -407,7 +481,7 @@ body {
     }
 
     .stat-value {
-        font-size: 1.3rem !important;
+        font-size: clamp(1.1rem, 4vw, 1.4rem) !important;
     }
 
     .stat-label {
@@ -425,7 +499,7 @@ body {
     }
 
     .section-title {
-        font-size: 0.8rem !important;
+        font-size: clamp(0.7rem, 2.5vw, 0.9rem) !important;
     }
 
     /* ── TEAM GRID ── */
@@ -437,6 +511,92 @@ body {
     .team-card {
         padding: 0.85rem !important;
         border-radius: 10px !important;
+    }
+
+    /* ── CHARTS ── */
+    .charts-row {
+        grid-template-columns: 1fr !important;
+    }
+
+    .chart-card {
+        margin-bottom: 0.5rem !important;
+    }
+
+    /* ── ALERT BANNER ── */
+    .alert-banner {
+        font-size: 0.7rem !important;
+        padding: 0.6rem 0.8rem !important;
+    }
+
+    /* ── COMPARE VIEW ── */
+    .compare-controls {
+        flex-direction: column !important;
+        gap: 0.5rem !important;
+        align-items: stretch !important;
+    }
+
+    .compare-select-wrap {
+        width: 100% !important;
+    }
+
+    .compare-select {
+        width: 100% !important;
+        min-height: 44px !important;
+    }
+
+    .compare-btn {
+        width: 100% !important;
+        min-height: 44px !important;
+    }
+
+    .compare-presets {
+        flex-wrap: wrap !important;
+    }
+
+    .compare-layout {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* ── RANKINGS VIEW ── */
+    .ranking-table {
+        display: block !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .ranking-title {
+        font-size: 0.75rem !important;
+    }
+
+    /* ── TESTING VIEW ── */
+    .testing-verdict-banner {
+        flex-direction: column !important;
+        gap: 0.5rem !important;
+    }
+
+    .tvb-divider {
+        display: none !important;
+    }
+
+    .testing-index-table-wrap {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .testing-charts-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .testing-methodology-grid {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)) !important;
+    }
+
+    .testing-team-cards {
+        grid-template-columns: 1fr !important;
+    }
+
+    .testing-predictions {
+        grid-template-columns: 1fr !important;
     }
 
     /* ── PREDICTIONS PAGE ── */
@@ -451,11 +611,11 @@ body {
     }
 
     .pred-heading {
-        font-size: 1.05rem !important;
+        font-size: clamp(0.85rem, 3vw, 1.1rem) !important;
     }
 
     .pred-subtitle {
-        font-size: 0.48rem !important;
+        font-size: clamp(0.42rem, 1.5vw, 0.55rem) !important;
         word-break: break-word !important;
     }
 
@@ -475,6 +635,7 @@ body {
     .pred-sim-btn {
         font-size: 0.55rem !important;
         padding: 0.45rem 0.7rem !important;
+        min-height: 44px !important;
     }
 
     /* Timeline horizontal scroll */
@@ -585,6 +746,25 @@ body {
     .schedule-race-card {
         padding: 0.75rem !important;
     }
+
+    /* ── FOOTER ── */
+    .footer-inner {
+        flex-direction: column !important;
+        text-align: center !important;
+        gap: 0.5rem !important;
+    }
+
+    .footer-brand {
+        font-size: clamp(0.65rem, 2.5vw, 0.85rem) !important;
+    }
+
+    .footer-info {
+        font-size: 0.55rem !important;
+    }
+
+    .footer-meta {
+        font-size: 0.5rem !important;
+    }
 }
 
 
@@ -628,6 +808,7 @@ body {
         padding: 0.2rem 0.4rem !important;
         font-size: 0.58rem !important;
         border-radius: 4px !important;
+        min-height: 44px !important;
     }
 
     /* ── TICKER ── */
@@ -695,6 +876,23 @@ body {
         border-radius: 8px !important;
     }
 
+    /* ── TEAM SELECTOR ── */
+    .team-selector {
+        flex-wrap: wrap !important;
+        gap: 0.3rem !important;
+    }
+
+    .team-sel-btn {
+        padding: 0.4rem 0.6rem !important;
+        font-size: 0.6rem !important;
+        min-height: 44px !important;
+    }
+
+    /* ── TEAM DETAIL PANEL ── */
+    .team-detail-panel {
+        padding: 0.5rem !important;
+    }
+
     /* ── PREDICTIONS PAGE ── */
     .pred-page {
         padding: 0.35rem !important;
@@ -731,6 +929,7 @@ body {
         text-align: center !important;
         border-radius: 6px !important;
         width: 100% !important;
+        min-height: 44px !important;
     }
 
     /* Version string on its own row */
@@ -796,7 +995,7 @@ body {
     .pred-page select {
         font-size: 0.55rem !important;
         padding: 0.3rem 0.2rem !important;
-        min-height: 32px !important;
+        min-height: 44px !important;
     }
 
     /* Buttons inside panels — make them full-width */
@@ -805,7 +1004,7 @@ body {
         width: 100% !important;
         padding: 0.4rem 0.5rem !important;
         font-size: 0.52rem !important;
-        min-height: 36px !important;
+        min-height: 44px !important;
         margin-bottom: 0.25rem !important;
     }
 
@@ -850,10 +1049,51 @@ body {
         border-radius: 10px !important;
     }
 
+    /* ── TESTING VIEW ── */
+    .test-team-card {
+        margin-bottom: 0.5rem !important;
+    }
+
+    .test-metric-row {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 0.3rem !important;
+    }
+
     /* ── SCHEDULE VIEW ── */
     .schedule-race-card .sched-meta {
         flex-direction: column !important;
         gap: 0.3rem !important;
+    }
+
+    .schedule-countdown {
+        flex-direction: column !important;
+        text-align: center !important;
+    }
+
+    .countdown-timer {
+        justify-content: center !important;
+    }
+
+    .schedule-filters {
+        gap: 0.25rem !important;
+    }
+
+    .schedule-filter-btn {
+        font-size: 0.6rem !important;
+        padding: 0.35rem 0.6rem !important;
+        min-height: 44px !important;
+    }
+
+    /* ── SUPPLIER GRID ── */
+    .supplier-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* ── COMPARE ── */
+    .preset-btn {
+        font-size: 0.55rem !important;
+        padding: 0.3rem 0.5rem !important;
+        min-height: 44px !important;
     }
 }
 
@@ -913,6 +1153,11 @@ body {
     .pred-all-races-grid {
         grid-template-columns: repeat(auto-fill, minmax(85px, 1fr)) !important;
     }
+
+    /* Drawer slightly wider on tiny screens */
+    .mobile-nav-drawer {
+        width: 90% !important;
+    }
 }
 
 
@@ -928,7 +1173,10 @@ body {
     .team-card,
     .stat-card,
     .drawer-nav-link,
-    .schedule-race-card {
+    .schedule-race-card,
+    .team-sel-btn,
+    .preset-btn,
+    .schedule-filter-btn {
         -webkit-tap-highlight-color: rgba(255, 255, 255, 0.06);
     }
 
@@ -951,13 +1199,18 @@ body {
         transform: scale(0.98) !important;
     }
 
-    /* Larger tap targets */
+    /* Larger minimum tap targets (44px per Apple HIG) */
     button,
     select,
     .pred-sim-btn,
     .nav-link,
-    .drawer-nav-link {
-        min-height: 40px !important;
+    .drawer-nav-link,
+    .team-sel-btn,
+    .preset-btn,
+    .compare-btn,
+    .schedule-filter-btn,
+    .refresh-btn {
+        min-height: 44px !important;
     }
 
     /* Momentum scrolling for overflow areas */
@@ -971,7 +1224,7 @@ body {
         -webkit-overflow-scrolling: touch;
     }
 
-    /* Hide thin scrollbars on touch */
+    /* Thin scrollbars on touch */
     ::-webkit-scrollbar {
         width: 2px !important;
         height: 2px !important;
@@ -1208,12 +1461,10 @@ body {
 }
 
 @keyframes pulse-line {
-
     0%,
     100% {
         opacity: 0.6;
     }
-
     50% {
         opacity: 1;
     }
@@ -1288,12 +1539,10 @@ body {
 }
 
 @keyframes pulse-badge {
-
     0%,
     100% {
         box-shadow: 0 0 0 0 rgba(225, 6, 0, 0.3);
     }
-
     50% {
         box-shadow: 0 0 0 4px rgba(225, 6, 0, 0);
     }

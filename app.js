@@ -938,57 +938,7 @@ const AppRouter = (() => {
     } catch (e) { /* ignore */ }
   }
 
-  // ── SWIPE GESTURES (mobile) ──
-  function initSwipeGestures() {
-    let startX = 0, startY = 0, swiping = false;
-    const SWIPE_THRESHOLD = 80;
-    const SWIPE_MAX_Y = 60; // Max vertical movement for horizontal swipe
-
-    document.addEventListener('touchstart', (e) => {
-      startX = e.touches[0].clientX;
-      startY = e.touches[0].clientY;
-      swiping = true;
-    }, { passive: true });
-
-    document.addEventListener('touchend', (e) => {
-      if (!swiping) return;
-      swiping = false;
-
-      const endX = e.changedTouches[0].clientX;
-      const endY = e.changedTouches[0].clientY;
-      const diffX = endX - startX;
-      const diffY = Math.abs(endY - startY);
-
-      // Only trigger if horizontal swipe is dominant
-      if (Math.abs(diffX) > SWIPE_THRESHOLD && diffY < SWIPE_MAX_Y) {
-        // Don't swipe if drawer is open or we're on an interactive element
-        const drawer = document.getElementById('mobile-nav-drawer');
-        if (drawer && drawer.classList.contains('open')) return;
-
-        const currentIdx = VIEWS_ORDER.indexOf(_currentView);
-        if (currentIdx === -1) return;
-
-        if (diffX < 0 && currentIdx < VIEWS_ORDER.length - 1) {
-          // Swipe left → next view
-          goView(VIEWS_ORDER[currentIdx + 1]);
-          triggerViewInit(VIEWS_ORDER[currentIdx + 1]);
-        } else if (diffX > 0 && currentIdx > 0) {
-          // Swipe right → previous view
-          goView(VIEWS_ORDER[currentIdx - 1]);
-          triggerViewInit(VIEWS_ORDER[currentIdx - 1]);
-        }
-      }
-    }, { passive: true });
-  }
-
-  function triggerViewInit(view) {
-    // goView already handles predictions rendering directly
-    if (view === 'schedule') {
-      setTimeout(() => {
-        if (typeof ScheduleView !== 'undefined') ScheduleView.init(null);
-      }, 200);
-    }
-  }
+  // ── SWIPE GESTURES REMOVED ── (mobile uses drawer menu for navigation)
 
   // ── PULL-TO-REFRESH (mobile) ──
   function initPullToRefresh() {
@@ -1073,9 +1023,8 @@ const AppRouter = (() => {
 
     // Mobile features
     if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
-      initSwipeGestures();
       initPullToRefresh();
-      console.log('[AppRouter] Mobile gestures initialized — swipe + pull-to-refresh');
+      console.log('[AppRouter] Mobile gestures initialized — pull-to-refresh');
     }
 
     // Restore last active view
