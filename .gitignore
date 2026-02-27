@@ -1,8 +1,3 @@
-# Python
-scraper.py
-__pycache__/
-*.pyc
-
 # Documentation (not needed for deployment)
 objective.txt
 F1_Architecture_and_Data_Flow.md
