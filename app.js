@@ -901,16 +901,10 @@ const AppRouter = (() => {
     if (el) el.classList.add('active');
     if (nav) nav.classList.add('active');
 
-    // Sync mobile bottom tab bar active state
-    const mainTabViews = ['dashboard', 'teams', 'analytics', 'predictions', 'schedule'];
-    document.querySelectorAll('.bottom-tab').forEach(t => t.classList.remove('active'));
-    if (mainTabViews.includes(view)) {
-      const tab = document.querySelector(`.bottom-tab[data-view="${view}"]`);
-      if (tab) tab.classList.add('active');
-    } else {
-      const moreBtn = document.getElementById('btab-more');
-      if (moreBtn) moreBtn.classList.add('active');
-    }
+    // Sync mobile drawer active state
+    document.querySelectorAll('.drawer-nav-link').forEach(l => {
+      l.classList.toggle('active', l.dataset.view === view);
+    });
 
     // Persist active view
     try { (window.safeStorage || localStorage).setItem(STORAGE_KEY, view); } catch (e) { /* ignore */ }
@@ -944,7 +938,7 @@ const AppRouter = (() => {
     } catch (e) { /* ignore */ }
   }
 
-  // ── SWIPE GESTURES REMOVED ── (mobile uses bottom tab bar for navigation)
+  // ── SWIPE GESTURES REMOVED ── (mobile uses drawer menu for navigation)
 
   // ── PULL-TO-REFRESH (mobile) ──
   function initPullToRefresh() {
@@ -1123,6 +1117,23 @@ const AutoRefresh = (() => {
     });
 
     console.log('[F1 Intelligence] ✅ System loaded. Season 2026 | Teams:', data.teams.length);
+
+    // Early OpenF1 API probe — detect if API requires auth before predictions load
+    window._openf1ApiOk = false; // assume down until proven otherwise
+    fetch('https://api.openf1.org/v1/sessions?year=2026&limit=1', { signal: AbortSignal.timeout(6000) })
+      .then(resp => {
+        if (resp.ok) {
+          window._openf1ApiOk = true;
+          console.log('[App] ✅ OpenF1 API is reachable');
+        } else {
+          window._openf1ApiOk = false;
+          console.warn(`[App] ⚠️ OpenF1 API returned ${resp.status} — predictions will run in Simulation Mode`);
+        }
+      })
+      .catch(() => {
+        window._openf1ApiOk = false;
+        console.warn('[App] ⚠️ OpenF1 API unreachable — predictions will run in Simulation Mode');
+      });
 
     // Predictions Center — wait for predictions.js to load (defer scripts may still be executing)
     // On fast CDNs like Vercel Edge, DataLoader.load() resolves in <10ms which can outrace defer scripts

@@ -1,177 +1,117 @@
 'use strict';
 /* ═══════════════════════════════════════════════════════════════
-   SCHEDULE VIEW + MOBILE NAV — ScheduleView.js  v3.0
+   SCHEDULE VIEW + MOBILE NAV — ScheduleView.js  v2.0
    Renders the full 24-race 2026 calendar with predictions,
-   countdown timer, filters, and handles mobile bottom tab bar.
+   countdown timer, filters, and handles mobile hamburger menu.
    
-   v3.0 CHANGES:
-   - Replaced hamburger/drawer with fixed bottom tab bar
-   - Bottom tab bar is always visible on mobile
-   - "More" button shows popup for less-used tabs
-   - No swipe navigation — tabs only
-   - Predictions & Live Intel init from tabs works
-   - Schedule view init from tabs works
+   v2.0 FIXES:
+   - Hamburger menu now properly opens/closes
+   - Drawer links properly trigger view initialization
+   - Predictions & Live Intel init from drawer works
+   - Schedule view init from drawer works
+   - Body scroll lock/unlock on drawer open/close
    ═══════════════════════════════════════════════════════════════ */
 
-// ── MOBILE BOTTOM TAB BAR HANDLER ──
+// ── MOBILE NAVIGATION HANDLER ──
 const MobileNav = (() => {
+    let isOpen = false;
     let _initialized = false;
-    let _moreOpen = false;
 
     function init() {
         if (_initialized) return;
         _initialized = true;
 
-        const tabBar = document.getElementById('mobile-bottom-tabs');
-        const moreBtn = document.getElementById('btab-more');
-        const morePopup = document.getElementById('bottom-more-popup');
-
-        if (!tabBar) {
-            console.warn('[MobileNav] Bottom tab bar not found, retrying in 500ms...');
+        const hamburger = document.getElementById('hamburger-btn');
+        const overlay = document.getElementById('mobile-nav-overlay');
+        const drawer = document.getElementById('mobile-nav-drawer');
+        if (!hamburger || !overlay || !drawer) {
+            console.warn('[MobileNav] Missing DOM elements, retrying in 500ms...');
             _initialized = false;
             setTimeout(init, 500);
             return;
         }
 
-        // Show the tab bar on mobile
-        if (window.innerWidth <= 768) {
-            tabBar.classList.add('visible');
-        }
-
-        // Listen for resize to show/hide
-        window.addEventListener('resize', () => {
-            if (window.innerWidth <= 768) {
-                tabBar.classList.add('visible');
-            } else {
-                tabBar.classList.remove('visible');
-                _closeMore();
-            }
+        // Hamburger click
+        hamburger.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            toggle();
         });
 
-        // Tab clicks
-        tabBar.querySelectorAll('.bottom-tab[data-view]').forEach(tab => {
-            tab.addEventListener('click', (e) => {
+        // Overlay click closes drawer
+        overlay.addEventListener('click', (e) => {
+            e.preventDefault();
+            close();
+        });
+
+        // Each drawer link: navigate + close drawer
+        drawer.querySelectorAll('.drawer-nav-link').forEach(link => {
+            link.addEventListener('click', (e) => {
                 e.preventDefault();
-                const view = tab.dataset.view;
+                const view = link.dataset.view;
                 if (!view) return;
 
-                // Update bottom tab active states
-                tabBar.querySelectorAll('.bottom-tab').forEach(t => t.classList.remove('active'));
-                tab.classList.add('active');
+                // Update active state in drawer
+                drawer.querySelectorAll('.drawer-nav-link').forEach(l => l.classList.remove('active'));
+                link.classList.add('active');
 
-                // Close more popup if open
-                _closeMore();
+                // Update active state in desktop nav
+                document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
+                const desktopLink = document.querySelector(`.nav-link[data-view="${view}"]`);
+                if (desktopLink) desktopLink.classList.add('active');
 
-                // Navigate
-                _navigateTo(view);
+                // Close drawer first
+                close();
+
+                // Navigate — use AppRouter if available
+                if (typeof AppRouter !== 'undefined' && AppRouter.goView) {
+                    AppRouter.goView(view);
+                } else {
+                    // Fallback: directly toggle view visibility
+                    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+                    const el = document.getElementById('view-' + view);
+                    if (el) el.classList.add('active');
+                }
+
+                // CRITICAL: Trigger PredictionsCenter init for predictions/live-intel views
+                if (view === 'predictions') {
+                    _triggerPredictionsInit();
+                }
+
+                // Trigger Schedule init for schedule view
+                if (view === 'schedule') {
+                    _triggerScheduleInit();
+                }
             });
         });
 
-        // More button
-        if (moreBtn) {
-            moreBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                if (_moreOpen) {
-                    _closeMore();
-                } else {
-                    _openMore();
+        // Sync drawer active state when desktop nav is used
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', () => {
+                const view = link.dataset.view;
+                if (drawer) {
+                    drawer.querySelectorAll('.drawer-nav-link').forEach(l => {
+                        l.classList.toggle('active', l.dataset.view === view);
+                    });
                 }
             });
-        }
-
-        // More popup links
-        if (morePopup) {
-            morePopup.querySelectorAll('.more-popup-link').forEach(link => {
-                link.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    const view = link.dataset.view;
-                    if (!view) return;
-
-                    // Update bottom tab active states — set "More" as active for these views
-                    tabBar.querySelectorAll('.bottom-tab').forEach(t => t.classList.remove('active'));
-                    if (moreBtn) moreBtn.classList.add('active');
-
-                    _closeMore();
-                    _navigateTo(view);
-
-                    // Special: Live Intel
-                    if (link.id === 'more-live-intel') {
-                        setTimeout(() => {
-                            if (typeof LiveIntelligence !== 'undefined' && LiveIntelligence.init) {
-                                LiveIntelligence.refresh();
-                            }
-                        }, 300);
-                    }
-                });
-            });
-        }
-
-        // Close more popup when clicking outside
-        document.addEventListener('click', (e) => {
-            if (_moreOpen && morePopup && !morePopup.contains(e.target) && e.target !== moreBtn && !moreBtn.contains(e.target)) {
-                _closeMore();
-            }
         });
 
         // Close on escape
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && _moreOpen) _closeMore();
+            if (e.key === 'Escape' && isOpen) close();
         });
 
-        // Sync bottom tab when desktop nav is used
-        document.querySelectorAll('.nav-link').forEach(link => {
-            link.addEventListener('click', () => {
-                const view = link.dataset.view;
-                _syncTabState(view);
-            });
-        });
-
-        console.log('[MobileNav] v3.0 Initialized — bottom tab bar ready');
-    }
-
-    function _navigateTo(view) {
-        // Update desktop nav active state
-        document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
-        const desktopLink = document.querySelector(`.nav-link[data-view="${view}"]`);
-        if (desktopLink) desktopLink.classList.add('active');
-
-        // Navigate via AppRouter if available
-        if (typeof AppRouter !== 'undefined' && AppRouter.goView) {
-            AppRouter.goView(view);
-        } else {
-            // Fallback: directly toggle view visibility
-            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-            const el = document.getElementById('view-' + view);
-            if (el) el.classList.add('active');
-        }
-
-        // Trigger PredictionsCenter init
-        if (view === 'predictions') {
-            _triggerPredictionsInit();
-        }
-
-        // Trigger Schedule init
-        if (view === 'schedule') {
-            _triggerScheduleInit();
-        }
-
-        // Trigger Testing view init
-        if (view === 'testing') {
-            setTimeout(() => {
-                const navTest = document.getElementById('nav-testing');
-                if (navTest) {
-                    const evt = new Event('click', { bubbles: true });
-                    navTest.dispatchEvent(evt);
-                }
-            }, 150);
-        }
+        console.log('[MobileNav] Initialized — hamburger menu ready');
     }
 
     function _triggerPredictionsInit() {
+        // Directly trigger the PredictionsCenter click handler on the desktop nav element
+        // We need a small delay to let the view become visible first
         setTimeout(() => {
             const navPred = document.getElementById('nav-predictions');
             if (navPred) {
+                // Fire click event which predictions.js is listening to
                 const evt = new Event('click', { bubbles: true });
                 navPred.dispatchEvent(evt);
             }
@@ -179,44 +119,43 @@ const MobileNav = (() => {
     }
 
     function _triggerScheduleInit() {
+        // Directly init schedule view
         setTimeout(() => {
             ScheduleView.init(null);
         }, 100);
     }
 
-    function _openMore() {
-        _moreOpen = true;
-        const popup = document.getElementById('bottom-more-popup');
-        if (popup) popup.classList.add('visible');
-    }
-
-    function _closeMore() {
-        _moreOpen = false;
-        const popup = document.getElementById('bottom-more-popup');
-        if (popup) popup.classList.remove('visible');
-    }
-
-    function _syncTabState(view) {
-        const tabBar = document.getElementById('mobile-bottom-tabs');
-        if (!tabBar) return;
-        const mainTabs = ['dashboard', 'teams', 'analytics', 'predictions', 'schedule'];
-
-        tabBar.querySelectorAll('.bottom-tab').forEach(t => t.classList.remove('active'));
-
-        if (mainTabs.includes(view)) {
-            const tab = tabBar.querySelector(`.bottom-tab[data-view="${view}"]`);
-            if (tab) tab.classList.add('active');
+    function toggle() {
+        if (isOpen) {
+            close();
         } else {
-            // It's a "more" view
-            const moreBtn = document.getElementById('btab-more');
-            if (moreBtn) moreBtn.classList.add('active');
+            open();
         }
     }
 
-    // Expose open/close/toggle for backward compatibility
-    function toggle() { }
-    function open() { }
-    function close() { _closeMore(); }
+    function open() {
+        isOpen = true;
+        const hamburger = document.getElementById('hamburger-btn');
+        const overlay = document.getElementById('mobile-nav-overlay');
+        const drawer = document.getElementById('mobile-nav-drawer');
+
+        if (hamburger) hamburger.classList.add('active');
+        if (overlay) overlay.classList.add('visible');
+        if (drawer) drawer.classList.add('open');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function close() {
+        isOpen = false;
+        const hamburger = document.getElementById('hamburger-btn');
+        const overlay = document.getElementById('mobile-nav-overlay');
+        const drawer = document.getElementById('mobile-nav-drawer');
+
+        if (hamburger) hamburger.classList.remove('active');
+        if (overlay) overlay.classList.remove('visible');
+        if (drawer) drawer.classList.remove('open');
+        document.body.style.overflow = '';
+    }
 
     return { init, toggle, open, close };
 })();
@@ -538,8 +477,8 @@ const QualifyingLiveDisplay = (() => {
 // ── BOOT ──
 // Use multiple strategies to ensure init runs after DOM is ready
 function _bootMobileNav() {
-    const tabBar = document.getElementById('mobile-bottom-tabs');
-    if (tabBar) {
+    const hamburger = document.getElementById('hamburger-btn');
+    if (hamburger) {
         MobileNav.init();
     } else {
         // DOM not ready yet, retry
@@ -568,5 +507,5 @@ window.addEventListener('load', () => {
     }
 });
 
-console.log('%c[ScheduleView] v3.0 Ready — 24-race calendar + bottom tab bar', 'color:#f97316;font-weight:bold');
+console.log('%c[ScheduleView] v2.0 Ready — 24-race calendar + mobile nav', 'color:#f97316;font-weight:bold');
 console.log('%c[QualifyingLiveDisplay] Ready — qualifying grid display engine', 'color:#a78bfa;font-weight:bold');

@@ -1,0 +1,6 @@
+How to Fix This
+Would you like me to:
+
+Add graceful degradation — when OpenF1 is down, auto-run offline simulations and show a clear "Simulation Mode" indicator instead of broken "DEGRADED" status?
+Make the site auto-trigger predictions so users always see predictions even without the live API?
+Look into OpenF1 sponsorship/authentication — add an API key system if you decide to subscribe?

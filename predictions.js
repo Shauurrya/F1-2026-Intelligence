@@ -3455,6 +3455,21 @@ const PredictionsCenter = (() => {
 
     RenderEngine.rendered = true;
     console.log('[PredCenter] ✅ Predictions Center fully rendered!');
+
+    // AUTO-RUN: If OpenF1 API is unavailable (simulation mode), auto-trigger predictions
+    // so users always see results without manually clicking "Run Race Sim"
+    setTimeout(() => {
+      const isSimMode = (typeof window.LiveIntelligence !== 'undefined' && window.LiveIntelligence.isSimulationMode?.())
+        || (typeof window.ApiHealthDashboard !== 'undefined' && window.ApiHealthDashboard.getSources?.().openf1?.status === 'auth_required');
+      if (isSimMode || !window._openf1ApiOk) {
+        console.log('[PredCenter] 🧪 API unavailable — auto-running Monte Carlo simulation...');
+        try {
+          runRaceSim();
+        } catch (e) {
+          console.warn('[PredCenter] Auto-sim error:', e.message);
+        }
+      }
+    }, 1500);
   }
 
   // EMBEDDED FALLBACK CALENDAR — all 24 races inline

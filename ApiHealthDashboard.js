@@ -58,7 +58,7 @@ window.ApiHealthDashboard = (() => {
         if (!src) return;
 
         const testUrls = {
-            openf1: 'https://api.openf1.org/v1/sessions?session_key=11465',
+            openf1: 'https://api.openf1.org/v1/sessions?year=2026&limit=1',
             jolpica: 'https://api.jolpi.ca/ergast/f1/current.json',
             openmeteo: 'https://api.open-meteo.com/v1/forecast?latitude=0&longitude=0&daily=temperature_2m_max&forecast_days=1',
         };
@@ -75,11 +75,18 @@ window.ApiHealthDashboard = (() => {
 
             const latency = Math.round(performance.now() - start);
             src.latencyMs = latency;
-            src.successCount++;
 
             if (resp.ok) {
+                src.successCount++;
                 src.status = latency > 3000 ? 'degraded' : 'online';
                 src.lastSuccess = new Date();
+                src.authRequired = false;
+            } else if (resp.status === 401 || resp.status === 403) {
+                // Auth required — not an error, just a policy change
+                src.status = 'auth_required';
+                src.authRequired = true;
+                src.lastError = new Date();
+                src.errorCount++;
             } else {
                 src.status = 'degraded';
                 src.lastError = new Date();
@@ -147,7 +154,7 @@ window.ApiHealthDashboard = (() => {
     // RENDER WIDGET
     // ─────────────────────────────────────────────────────────────
     function getStatusColor(status) {
-        return { online: '#3fb950', degraded: '#f0883e', offline: '#f44336', unknown: '#666' }[status] || '#666';
+        return { online: '#3fb950', degraded: '#f0883e', offline: '#f44336', unknown: '#666', auth_required: '#a78bfa' }[status] || '#666';
     }
 
     function getStatusDot(status) {
@@ -160,8 +167,9 @@ window.ApiHealthDashboard = (() => {
 
         const allOnline = Object.values(sources).every(s => s.status === 'online');
         const anyOffline = Object.values(sources).some(s => s.status === 'offline');
-        const overallColor = anyOffline ? '#f44336' : allOnline ? '#3fb950' : '#f0883e';
-        const overallLabel = anyOffline ? 'DEGRADED' : allOnline ? 'ALL SYSTEMS GO' : 'PARTIAL';
+        const anyAuth = Object.values(sources).some(s => s.status === 'auth_required');
+        const overallColor = anyOffline ? '#f44336' : allOnline ? '#3fb950' : anyAuth ? '#a78bfa' : '#f0883e';
+        const overallLabel = anyOffline ? 'DEGRADED' : allOnline ? 'ALL SYSTEMS GO' : anyAuth ? 'SIM MODE' : 'PARTIAL';
 
         let html = `<div id="api-health-header" style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:6px 10px;background:${overallColor}10;border:1px solid ${overallColor}33;border-radius:8px;user-select:none">
             <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${overallColor};box-shadow:0 0 8px ${overallColor}55;animation:pulse 2s infinite"></span>
@@ -183,8 +191,9 @@ window.ApiHealthDashboard = (() => {
                         <div style="display:flex;align-items:center;gap:4px">
                             ${getStatusDot(src.status)}
                             <span style="font-size:0.55rem;color:#ddd;font-weight:600">${src.name}</span>
-                            <span style="font-size:0.45rem;color:${color};margin-left:auto;text-transform:uppercase;font-weight:700">${src.status}</span>
+                            <span style="font-size:0.45rem;color:${color};margin-left:auto;text-transform:uppercase;font-weight:700">${src.status === 'auth_required' ? 'AUTH REQ' : src.status}</span>
                         </div>
+                        ${src.authRequired ? '<div style="font-size:0.42rem;color:#a78bfa;margin-top:2px">🔒 Requires sponsor access — using simulation mode</div>' : ''}
                         <div style="display:flex;gap:8px;margin-top:2px">
                             <span style="font-size:0.45rem;color:#888">⏱ ${src.latencyMs ? src.latencyMs + 'ms' : '—'}</span>
                             <span style="font-size:0.45rem;color:#888">✓ ${src.successCount}</span>
@@ -217,30 +226,11 @@ window.ApiHealthDashboard = (() => {
     // INITIALIZATION
     // ─────────────────────────────────────────────────────────────
     function init() {
-        // Create floating widget — positioned top-right to avoid overlapping bottom tab bar
+        // Create floating widget
         _widgetElement = document.createElement('div');
         _widgetElement.id = 'api-health-widget';
-        _widgetElement.style.cssText = 'position:fixed;top:70px;bottom:auto;right:12px;z-index:250;min-width:140px;max-width:260px;background:#0d1117ee;backdrop-filter:blur(12px);border:1px solid #ffffff12;border-radius:10px;padding:6px;box-shadow:0 8px 32px #00000055;font-family:Inter,sans-serif;transition:all 0.3s ease;max-height:calc(100vh - 100px);overflow-y:auto';
+        _widgetElement.style.cssText = 'position:fixed;bottom:16px;right:16px;z-index:9999;min-width:180px;max-width:320px;background:#0d1117ee;backdrop-filter:blur(12px);border:1px solid #ffffff12;border-radius:12px;padding:8px;box-shadow:0 8px 32px #00000055;font-family:Inter,sans-serif;transition:all 0.3s ease';
         document.body.appendChild(_widgetElement);
-
-        // Adjust position on mobile — below smaller header
-        if (window.innerWidth <= 768) {
-            _widgetElement.style.top = '60px';
-            _widgetElement.style.maxWidth = '200px';
-        }
-
-        // Re-position on window resize
-        window.addEventListener('resize', function () {
-            if (_widgetElement) {
-                if (window.innerWidth <= 768) {
-                    _widgetElement.style.top = '60px';
-                    _widgetElement.style.maxWidth = '200px';
-                } else {
-                    _widgetElement.style.top = '70px';
-                    _widgetElement.style.maxWidth = '260px';
-                }
-            }
-        });
 
         // Initial health check
         checkAllHealth();

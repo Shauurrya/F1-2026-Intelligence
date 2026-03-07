@@ -18,6 +18,7 @@ const LiveIntelligence = (() => {
         CACHE_TTL_IDLE: 60000,    // 1min cache when idle
         HIGH_ACCURACY_SIMS: 2000, // Phase 8: double sims when full data
         NEWS_KEYWORDS: ['upgrade', 'penalty', 'grid drop', 'power unit', 'rain', 'technical directive', 'disqualified', 'injury', 'fastest', 'crash', 'red flag'],
+        MAX_API_FAILURES: 3,      // After N consecutive failures, switch to sim mode
     };
 
     const state = {
@@ -37,6 +38,10 @@ const LiveIntelligence = (() => {
         predictionOverrides: {},   // Temporary team pace modifiers from news
         cache: {},                 // { url: { data, timestamp } }
         highAccuracyMode: false,
+        // Graceful degradation state
+        apiFailureCount: 0,
+        simulationOnlyMode: false, // true when API is unreachable
+        autoSimTriggered: false,   // prevent duplicate auto-sim
     };
 
     // ─────────────────────────────────────────────────────────────
@@ -60,21 +65,38 @@ const LiveIntelligence = (() => {
             const resp = await fetch(url, { signal: controller.signal });
             clearTimeout(timeout);
 
+            // Auth failure (401) — OpenF1 now requires sponsor access for live data
+            if (resp.status === 401 || resp.status === 403) {
+                state.apiFailureCount++;
+                if (state.apiFailureCount >= CONFIG.MAX_API_FAILURES && !state.simulationOnlyMode) {
+                    state.simulationOnlyMode = true;
+                    console.warn('[LiveData] ⚠️ OpenF1 API requires authentication (401). Switching to SIMULATION-ONLY mode.');
+                    _triggerAutoSimulation();
+                }
+                if (typeof window.ApiHealthDashboard !== 'undefined') {
+                    window.ApiHealthDashboard.recordError('openf1');
+                }
+                return state.cache[cacheKey]?.data || null;
+            }
+
             // Rate limit backoff (429) or server overload (503)
             if (resp.status === 429 || resp.status === 503) {
                 console.warn(`[LiveData] Rate limited (${resp.status}) — backing off`);
                 state._rateLimitBackoff = (state._rateLimitBackoff || 0) + 1;
-                // Exponential backoff: double the live refresh interval, max 30s
                 CONFIG.REFRESH_LIVE = Math.min(CONFIG.REFRESH_LIVE * 2, 30000);
-                // Return stale cache if available
                 return state.cache[cacheKey]?.data || null;
             }
 
-            // Successful response — gradually restore normal polling speed
+            // Successful response — reset failure tracking
+            state.apiFailureCount = 0;
+            if (state.simulationOnlyMode) {
+                state.simulationOnlyMode = false;
+                console.log('[LiveData] ✅ OpenF1 API recovered — exiting simulation-only mode');
+            }
             if (state._rateLimitBackoff && state._rateLimitBackoff > 0) {
                 state._rateLimitBackoff--;
                 if (state._rateLimitBackoff <= 0) {
-                    CONFIG.REFRESH_LIVE = 5000; // restore to normal 5s
+                    CONFIG.REFRESH_LIVE = 5000;
                     state._rateLimitBackoff = 0;
                 }
             }
@@ -82,12 +104,19 @@ const LiveIntelligence = (() => {
             if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
             const data = await resp.json();
 
-            // Update cache
             state.cache[cacheKey] = { data, timestamp: Date.now() };
+            if (typeof window.ApiHealthDashboard !== 'undefined') {
+                window.ApiHealthDashboard.recordSuccess('openf1', Math.round(performance.now()));
+            }
             return data;
         } catch (err) {
+            state.apiFailureCount++;
             console.warn(`[LiveData] Fetch failed: ${url}`, err.message);
-            // Fallback to cached data even if stale
+            if (state.apiFailureCount >= CONFIG.MAX_API_FAILURES && !state.simulationOnlyMode) {
+                state.simulationOnlyMode = true;
+                console.warn('[LiveData] ⚠️ API unreachable after multiple failures. Switching to SIMULATION-ONLY mode.');
+                _triggerAutoSimulation();
+            }
             if (state.cache[cacheKey]) return state.cache[cacheKey].data;
             return null;
         }
@@ -482,10 +511,18 @@ const LiveIntelligence = (() => {
 
         let html = '';
 
-        // Status bar
-        const sessionLabel = state.sessionStatus === 'idle' ? 'NO ACTIVE SESSION' :
-            state.sessionStatus.toUpperCase() + (state.isLiveSession ? ' — LIVE' : '');
-        const statusColor = state.isLiveSession ? '#3fb950' : state.sessionStatus !== 'idle' ? '#ffd166' : '#666';
+        // Status bar — show simulation mode banner when API is down
+        let sessionLabel, statusColor;
+        if (state.simulationOnlyMode) {
+            sessionLabel = '🧪 SIMULATION MODE — API UNAVAILABLE';
+            statusColor = '#a78bfa';
+        } else if (state.sessionStatus === 'idle') {
+            sessionLabel = 'NO ACTIVE SESSION';
+            statusColor = '#666';
+        } else {
+            sessionLabel = state.sessionStatus.toUpperCase() + (state.isLiveSession ? ' — LIVE' : '');
+            statusColor = state.isLiveSession ? '#3fb950' : '#ffd166';
+        }
         html += `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.8rem">
       <div style="display:flex;align-items:center;gap:0.5rem">
         <span style="width:8px;height:8px;border-radius:50%;background:${statusColor};display:inline-block${state.isLiveSession ? ';animation:pulse 1.5s infinite' : ''}"></span>
@@ -493,6 +530,13 @@ const LiveIntelligence = (() => {
       </div>
       <span id="live-intel-timestamp" style="color:#666;font-size:0.6rem;font-family:monospace"></span>
     </div>`;
+        // Simulation mode explainer banner
+        if (state.simulationOnlyMode) {
+            html += `<div style="background:#a78bfa12;border:1px solid #a78bfa33;border-radius:8px;padding:0.5rem 0.7rem;margin-bottom:0.6rem;font-size:0.6rem;color:#a78bfa">
+        <strong>🔮 Running in Simulation Mode</strong><br>
+        <span style="color:#888;font-size:0.55rem">OpenF1 API is unavailable (401 Auth Required). Predictions are generated using our Monte Carlo engine with 1,000+ simulations using Bahrain testing data, driver ratings, and track-specific models. All formulas are fully active.</span>
+      </div>`;
+        }
 
         // Weather card
         if (hasWeather) {
@@ -536,11 +580,14 @@ const LiveIntelligence = (() => {
 
         // Win Probabilities (from predictions engine if available)
         if (typeof PredictionsCenter !== 'undefined') {
-            html += `<div style="margin-bottom:0.4rem;margin-top:0.4rem"><span style="color:#aaa;font-size:0.65rem;font-weight:bold">TOP 5 WIN PROBABILITY</span>
-        ${state.highAccuracyMode ? '<span style="color:#3fb950;font-size:0.55rem;margin-left:0.5rem;padding:0.1rem 0.4rem;background:#3fb95015;border-radius:3px">🎯 HIGH ACCURACY MODE</span>' : ''}
-      </div>`;
-            // This will be populated after prediction runs
-            html += '<div id="live-win-probs" style="font-size:0.65rem;color:#888">Click "Run Race Sim" for live probabilities</div>';
+            const modeLabel = state.simulationOnlyMode
+                ? '<span style="color:#a78bfa;font-size:0.55rem;margin-left:0.5rem;padding:0.1rem 0.4rem;background:#a78bfa15;border-radius:3px">🧪 SIMULATED</span>'
+                : state.highAccuracyMode
+                    ? '<span style="color:#3fb950;font-size:0.55rem;margin-left:0.5rem;padding:0.1rem 0.4rem;background:#3fb95015;border-radius:3px">🎯 HIGH ACCURACY MODE</span>'
+                    : '';
+            html += `<div style="margin-bottom:0.4rem;margin-top:0.4rem"><span style="color:#aaa;font-size:0.65rem;font-weight:bold">TOP 5 WIN PROBABILITY</span>${modeLabel}</div>`;
+            html += '<div id="live-win-probs" style="font-size:0.65rem;color:#888">' +
+                (state.autoSimTriggered ? 'Auto-simulation results displayed below ↓' : 'Click "Run Race Sim" for live probabilities') + '</div>';
         }
 
         // News Alerts
@@ -726,6 +773,19 @@ const LiveIntelligence = (() => {
         // Start auto-refresh loop (polling fallback if SSE not available)
         startAutoRefresh();
         console.log('%c[LiveIntelligence] Initialized — SIM ENGINE v12.0 + LIVE DATA + SSE', 'color:#3fb950;font-weight:bold');
+
+        // Update header badge if in simulation mode
+        setTimeout(() => {
+            if (state.simulationOnlyMode) {
+                const badge = document.getElementById('header-live-badge');
+                const label = document.getElementById('header-live-label');
+                if (badge) badge.style.background = 'rgba(167,139,250,0.15)';
+                if (badge) badge.style.borderColor = '#a78bfa33';
+                if (label) { label.textContent = 'SIM MODE'; label.style.color = '#a78bfa'; }
+                const dot = badge?.querySelector('.live-dot');
+                if (dot) { dot.style.background = '#a78bfa'; dot.style.boxShadow = '0 0 8px #a78bfa55'; }
+            }
+        }, 5000);
     }
 
     function injectLiveDashboard() {
@@ -762,6 +822,41 @@ const LiveIntelligence = (() => {
     }
 
     // ─────────────────────────────────────────────────────────────
+    // AUTO-SIMULATION TRIGGER (when API is unavailable)
+    // ─────────────────────────────────────────────────────────────
+    function _triggerAutoSimulation() {
+        if (state.autoSimTriggered) return;
+        state.autoSimTriggered = true;
+        console.log('[LiveData] 🧪 Auto-triggering Monte Carlo simulation (API unavailable)...');
+
+        // Wait for PredictionsCenter to be ready, then auto-run
+        const tryAutoSim = () => {
+            if (typeof PredictionsCenter !== 'undefined' && typeof PredictionsCenter.runRaceSim === 'function') {
+                // Small delay to ensure DOM is ready
+                setTimeout(() => {
+                    try {
+                        PredictionsCenter.runRaceSim();
+                        console.log('[LiveData] ✅ Auto-simulation triggered successfully');
+                        // Show toast notification
+                        if (typeof window.LiveAutoUpdate !== 'undefined' && window.LiveAutoUpdate.showToast) {
+                            window.LiveAutoUpdate.showToast(
+                                '🧪 OpenF1 API unavailable — running predictions in Simulation Mode using all 20+ engines',
+                                'info'
+                            );
+                        }
+                    } catch (e) {
+                        console.warn('[LiveData] Auto-sim failed:', e.message);
+                    }
+                }, 500);
+            } else {
+                // Retry after PredictionsCenter loads
+                setTimeout(tryAutoSim, 2000);
+            }
+        };
+        tryAutoSim();
+    }
+
+    // ─────────────────────────────────────────────────────────────
     // PUBLIC API
     // ─────────────────────────────────────────────────────────────
     return {
@@ -772,6 +867,7 @@ const LiveIntelligence = (() => {
         getState: () => state,
         getOverrides: () => state.predictionOverrides,
         isHighAccuracy: () => state.highAccuracyMode,
+        isSimulationMode: () => state.simulationOnlyMode,
         QualifyingTracker,
         NewsDetector,
     };

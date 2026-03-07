@@ -1,7 +1,7 @@
-# Python bytecode
+# Python
+scraper.py
 __pycache__/
 *.pyc
-*.pyo
 
 # Documentation (not needed for deployment)
 objective.txt
@@ -16,16 +16,7 @@ desktop.ini
 # IDE
 .vscode/
 .idea/
-*.swp
-*.swo
-
-# Dependencies (if any)
-node_modules/
 
 # Temp files
 *.tmp
 *.log
-
-# Environment
-.env
-.env.local
